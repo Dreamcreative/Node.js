@@ -8,5 +8,39 @@
  * 一块原始内存
  */
 
-const buf = Buffer.from("roob" , "ascii")
-console.log(buf.toString("hex"))
+// const buf = Buffer.from("maxiao","base64" )
+// console.log(buf)
+// console.log(buf.toString("hex"))
+/**
+ * 创建Buffer类
+ */
+let buf1 = Buffer.from("123456789")
+let buf2 = Buffer.from("qwert")
+/**
+ * 解码缓冲去数据并使用并使用指定的编码返回字符串。默认为“utf8”
+ */
+// console.log(buf1.toString()  ,buf2.toString()) 
+ /**
+  * 将 Node Buffer 转换为JSON对象的函数语法
+  */
+// console.log( buf1.toJSON()   ||  buf1.toJSON(buf1) )  
+/**
+ * Node 缓冲区合并的语法 
+ *  Buffer.concat( [ buf1 , buf2 ] )
+ */
+// console.log( Buffer.concat([buf1 , buf2 ]).toString())
+
+/**
+ * 缓冲区比较 
+ * buf.compare( otherBuffer) 
+ * 返回一个数字，表示buf 在otherBuffer 之前 ，之后 或相同
+ */
+// console.log( buf1.compare( buf2 ))
+
+/**
+ * Node 缓冲区拷贝语法 
+ * buf.copy( targetBuffer[, targetStart[, sourceStart[, sourceEnd]]] )
+ */
+/**将buf1 插入到 buf2 指定位置上 */
+// buf1.copy( buf2 ,3)
+// console.log( buf2.toString() )
