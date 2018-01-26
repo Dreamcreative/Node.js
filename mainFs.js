@@ -14,10 +14,13 @@ let fs = require("fs");
 /**
  * 非阻塞代码示例  异步
  */
-fs.readFile("input.txt" , ( err , data) =>{
-    if(err) return console.error(err );
-    console.log( data.toString()) ;
-})
+// fs.readFile("input.txt" , ( err , data) =>{
+//     if(err) return console.error(err );
+//     console.log( data.toString()) ;
+// })
+
+
+
 /**
  * 阻塞与非阻塞调用的不同，
  * 第一个示例在文件读取完后才执行   "完成"
@@ -30,4 +33,91 @@ fs.readFile("input.txt" , ( err , data) =>{
 //     if(err){ throw err}
 //     console.log("创建完成")
 // })
+
+
+/** 
+ * 打开文件  异步模式
+ *  fs.open( path , flags [, mode ] ,callback)
+ */
+// console.log("准备打开文件！")
+// fs.open( "input.txt" , "r+" , ( err , fd )=>{
+//     if( err ){ 
+//         return console.error( err )
+//     }
+//     console.log( "文件打开成功")
+// })
+
+
+/**
+ * 获取文件信息
+ *  fs.stat( path , callback)
+ *  fs.stat( path ) 执行后，会将stats类的实例返回给器回调函数，可以通过stats类中提供的方法判断文件相关属性
+ * 
+ */
+// fs.stat( "input.txt" ,( err , stats )=>{
+//     if(err ){
+//         return console.error( err ) 
+//     }
+//     console.log( stats)
+//     console.log( "读取文件信息成功！")
+
+//     console.log( "是否为文件( isFile) ？" + stats.isFile())
+//     console.log( "是否为目录( isDirectory ) ？" + stats.isDirectory())
+// })
+
+
+/**
+ * 写入文件
+ *  fs.writeFile( file , data [, options] ,callback)
+ *  如果文件存在 ，该方法写入的内容会覆盖旧的文件内容
+ */
+// console.log("开始写入文件")
+// let data= "我是通过写入的文件内容"
+// fs.writeFile( "input.txt" , data ,( err )=>{
+//     if( err ){
+//         return console.error ( err )
+//     }
+//     console.log("数据写入成功！");
+//     console.log("--------我是分割线-------------")
+//     console.log("读取写入的数据！");
+//     fs.readFile("input.txt" , ( err , data )=>{
+//         if(err){
+//             return console.error( err )
+//         }
+//         console.log("异步读取文件数据：  " + data.toString())
+//     })
+// })
+
+/**
+ * 读取文件
+ * fs.read( fd , buffer , offset , length , position , callback )
+ * fd  通过 fs.open()方法返回的文件描述符
+ * buffer  数据写入的缓冲区
+ * offset  缓冲区写入的写入偏移量
+ * length  要从文件中读取的字节数
+ * position  文件读取的其实位置， 如果position 的值为 null， 则会从当前文件指针的位置读取
+ * Callback 回调函数， 有三个参数 err , bytesRead  , buffer  , err 为错误信息 bytesRead 表示读取的字节数
+ *      Buffer 为缓冲区对象
+ */
+const buf = new Buffer(1024) ;
+console.log("准备打开已存在的文件！")
+fs.open( "input.txt" , "r+" ,( err ,fd )=>{
+    if(err ){
+        return console.error(err)
+    }
+    console.log("文件打开成功！");
+   console.log("准备读取文件：");
+   fs.read( fd, buf ,0 , buf.length , 0 ,( err , bytes )=>{
+       if(err){
+           console.log(err)
+       }
+       console.log( bytes + "   字节被读取")
+       if( bytes > 0 ){
+           console.log( buf.slice(0 ,bytes ).toString())
+       }
+   })
+})
+
+
+
 console.log("完成");
