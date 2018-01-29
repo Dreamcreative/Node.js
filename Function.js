@@ -2,7 +2,7 @@
  * node.js 核心模块  util  ，它提供常用函数的集合，用于弥补核心javascript的功能过于精简的不足
  * 
  * util.inherits( constructor , superConstructor ) 是一个实现对象间原型继承的函数
- * util.inherits() 只能继承对象 原型链上的属性， 而不能继承 构造函数自己内部定义的属性
+ * util.inherits() 只能继承构造函数 原型链上的属性， 而不能继承 构造函数自己内部定义的属性
  */
 const util = require("util");
 // function Base(){

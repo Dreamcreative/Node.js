@@ -17,7 +17,7 @@
 let buf1 = Buffer.from("123456789")
 let buf2 = Buffer.from("qwert")
 /**
- * 解码缓冲去数据并使用并使用指定的编码返回字符串。默认为“utf8”
+ * 解码缓冲区数据并使用指定的编码返回字符串。默认为“utf8”
  */
 // console.log(buf1.toString()  ,buf2.toString()) 
  /**

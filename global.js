@@ -9,4 +9,4 @@ function sss(){
 
 
 /** clearTimeout( t )  清除定时器*/
-/** setInterval( callback ,ms )   循环定时器*/
+/** setInterval( callback ,ms )   周期性定时器*/
