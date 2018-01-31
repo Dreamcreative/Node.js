@@ -37,6 +37,6 @@ var workmate3={
     },
     regeditTime:new Date()
 }
-db.compony.insert([ workmate1 ,workmate2 ,workmate3])
+db.workmate.insert([ workmate1 ,workmate2 ,workmate3])
 print("workmate update success!") 
 
