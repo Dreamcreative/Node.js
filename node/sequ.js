@@ -17,6 +17,8 @@ sequelize.authenticate().then(()=>{
     console.error( "Unable to connect to the database:" , err )
 })
 
+// 添加 douban 数据库 sequelize 如果存在，则添加数据，
+// 不存在 则新增 表
 const douban = sequelize.define("douban" , {
     rating:{
         type:Sequelize.STRING
@@ -89,8 +91,14 @@ const douban = sequelize.define("douban" , {
     },
 })
 
-exports.createDouban = function createDouban(  data ){
-    douban.sync({force:false }).then( ()=>{
+exports.createDouban =async function createDouban(  data ){
+    await douban.sync({force:false }).then( ()=>{
+        console.log("添加成功~")
+        return douban.create( data ) ;
+    })
+}
+exports.bulkCreateDouban =async function createDouban(  data ){
+    await douban.sync({force:false }).then( ()=>{
         console.log("添加成功~")
         return douban.bulkCreate( data ) ;
     })
