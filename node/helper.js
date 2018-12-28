@@ -30,6 +30,6 @@ helper.sleep=( sec )=>{
     }
 }
 helper.random=( sec=5 )=>{
-    return Math.floor( Math.random()*sec +1 ) ;
+    return Math.floor( Math.random()*sec +2 ) ;
 }
 module.exports = helper ;

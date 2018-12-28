@@ -1,10 +1,21 @@
 const { createDouban , bulkCreateDouban} = require("./sequ");
 const request = require("request");
+const schedule = require('node-schedule');
 const fs = require("fs") ;
 const helper = require("./helper.js");
+const preId = require("./now.js");
+const pauseTime = 10*60;
 let url = "https://api.douban.com/v2/book/";
-let id = 30302369 ;
-let scope = 100;
+let id  ;
+if(  /(\d+)+?/.test(preId)){
+    id =  RegExp.$1 ;
+}
+if( !id ){
+    console.log( "读取不到id~~~")
+    process.exit();
+}
+let scope = id;
+
 // 发送请求
 function send( url ){
     return new Promise( ( resolve , reject ) =>{
@@ -57,10 +68,14 @@ function send( url ){
             // }
         }catch(err){
             console.error("出错~" ,err );
+            await setCache( 'module.exports = "上一次出错ID: ' +  index++ +'"' ,"now" )
             if( /rate_limit_exceeded2/.test(err) ){
-                await setCache( "超时退出:  " +  i +"\n" )
+                //如果 报错为 请求次数超限  则 暂停
+                await helper.sleep( pauseTime ) ;
+            }
+            if( /book_not_found/.test(err) ){
                 //如果 报错为 请求次数超限  则 退出node 
-                process.exit();
+                await setCache( index +"," ,"unknown" )
             }
         }
         //暂停 n 秒执行
@@ -75,8 +90,8 @@ function send( url ){
     // }
 
     // 然后 退出 node 
-    await setCache( "正常退出 "+ index  + "\n" ) ; 
-    process.exit();
+    await setCache( "正常退出： "+ index  + "\n" , "cache" ) ; 
+    // process.exit();
 })();
 
 
@@ -90,15 +105,33 @@ function send( url ){
 //     }
 // }
 // 添加 日志
-async function setCache( data ){
+async function setCache( data , type ){
     let name = helper.timeDir( new Date() ,"ymd" ) ;
-    await fs.appendFileSync("./cache/cache"+ name +".text" , data ,( err )=>{
-        if( err ){
-            console.log( "err  " , err);
-        }else{
-            console.log(" 设置成功~");
-        }
-    } )
+    if( type =="cache"){
+        await fs.appendFileSync("./cache/cache"+ name +".txt" , data ,( err )=>{
+            if( err ){
+                console.log( "err  " , err);
+            }else{
+                console.log(" 设置成功~");
+            }
+        } )
+    }else if( type =="now" ){
+        await fs.writeFileSync("./now.js" , data , (err)=>{
+            if( err ){
+                console.log( "err  " , err);
+            }else{
+                console.log(" 设置成功~");
+            }
+        })
+    }else if( type =="unknown" ){
+        await fs.appendFileSync("./unknown/unknown"+name+".txt" , data , (err)=>{
+            if( err ){
+                console.log( "err  " , err);
+            }else{
+                console.log(" 设置成功~");
+            }
+        })
+    }
 }
 // function random( sec=5 ){
 //     return Math.floor( Math.random()*sec +1 ) ;
