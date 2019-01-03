@@ -4,7 +4,7 @@ const schedule = require('node-schedule');
 const fs = require("fs") ;
 const helper = require("./helper.js");
 const preId = require("./now.js");
-const proxys = require("./proxys.js");
+let proxys = require("./proxys.js");
 const timeout= 15000;
 let proxyIndex = proxys.length -1 ;
 const pauseTime = 10*60;
@@ -22,9 +22,10 @@ let scope = id;
 // 发送请求
 function send( url , proxy ){
     return new Promise( ( resolve , reject ) =>{
-        const proxies = request.defaults({'proxy': proxy });
+        //如果 proxy存在 则设置 代理 ，不存在 则使用 不使用代理
+        const proxies = proxy? request.defaults({'proxy': proxy }) : request ; 
         console.log( "proxies      " ,proxy )
-        proxies.get( {url:url,timeout: timeout}, function (err, req , res) {
+        proxies.get( url ,{timeout: timeout}, function (err, req , res) {
             if(err){
                 reject( err )
             }
@@ -47,7 +48,9 @@ function send( url , proxy ){
                     }
                     resolve( datas );
                 }
+                reject( "没有数据~" );
             }
+            reject( "没有数据~" );
         })
     })
 }
@@ -60,7 +63,7 @@ function send( url , proxy ){
         index = i ;
         try{
             if( proxyIndex < 0){
-                console.log( "proxyIndex == 0 ")
+                proxys = require("./proxys.js");
                 proxyIndex = proxys.length-1 ;
             }
             let data = await send( url + i , proxys[ proxyIndex ] ); //请求到的 接口内容

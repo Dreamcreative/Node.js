@@ -1,7 +1,7 @@
 var request = require("request");
 var cheerio = require("cheerio");
 var fs = require("fs");
-
+var timeout = 1*60*60 ; //重新获取ip时间
 var proxys = [];  //保存从网站上获取到的代理
 var useful = [];  //保存检查过有效性的代理
 
@@ -81,6 +81,9 @@ function check() {
 function saveProxys() {
     fs.writeFileSync("proxys.js", "module.exports = " + JSON.stringify(useful));
     console.log("Save finished!");
+    setInterval(()=>{
+        getXici();
+    } , timeout*1000)
 }
 
 getXici();  //启动这个爬虫
