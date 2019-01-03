@@ -5,7 +5,7 @@ const fs = require("fs") ;
 const helper = require("./helper.js");
 const preId = require("./now.js");
 const proxys = require("./proxys.js");
-const timeout= 10000;
+const timeout= 15000;
 let proxyIndex = proxys.length -1 ;
 const pauseTime = 10*60;
 let url = "https://api.douban.com/v2/book/";
@@ -67,6 +67,7 @@ function send( url , proxy ){
             if( data.douban_id ){
                 // datas.push( data );
                 console.log( "正在加入数据库");
+                await setCache( 'module.exports = "上一次存储ID的下一个ID: ' +  data.douban_id++ +'"' ,"now" )
                 await createDouban( data);
             }
             // if( datas.length ==50){
@@ -87,7 +88,6 @@ function send( url , proxy ){
             else if( /book_not_found/.test(err) ){
                 //如果 报错为 请求次数超限  则 退出node 
                 await setCache( index +"," ,"unknown" )
-                await setCache( 'module.exports = "上一次出错ID: ' +  index++ +'"' ,"now" )
             }else{
                 proxyIndex-- ;
             }
