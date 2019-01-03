@@ -1,7 +1,18 @@
 const Sequelize = require("sequelize");
-const sequelize = new Sequelize("node","root","123456" ,{
-    host:"localhost",
-    dialect:"mysql",
+// const sequelize = new Sequelize("node","root","123456" ,{
+//     host:"localhost",
+//     dialect:"mysql",
+//     operatorsAliases:false , 
+//     pool:{
+//         max:5,
+//         min:0 ,
+//         acquire:30000,
+//         idle:10000,
+//     }
+// }) ;
+const sequelize = new Sequelize("douban","douban","douban" ,{
+    host:"dev.guaishoubobo.com",
+    dialect:"postgres",
     operatorsAliases:false , 
     pool:{
         max:5,
@@ -33,7 +44,7 @@ const douban = sequelize.define("douban" , {
         type:Sequelize.STRING
     },
     tags :{
-        type:Sequelize.STRING
+        type:Sequelize.TEXT
     },
     origin_title :{
         type:Sequelize.STRING

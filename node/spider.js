@@ -4,6 +4,9 @@ const schedule = require('node-schedule');
 const fs = require("fs") ;
 const helper = require("./helper.js");
 const preId = require("./now.js");
+const proxys = require("./proxys.js");
+const timeout= 10000;
+let proxyIndex = proxys.length -1 ;
 const pauseTime = 10*60;
 let url = "https://api.douban.com/v2/book/";
 let id  ;
@@ -17,17 +20,19 @@ if( !id ){
 let scope = id;
 
 // 发送请求
-function send( url ){
+function send( url , proxy ){
     return new Promise( ( resolve , reject ) =>{
-        request( url ,( err, req , res )=>{
-            let msg = JSON.parse(req.body).msg;
+        const proxies = request.defaults({'proxy': proxy });
+        console.log( "proxies      " ,proxy )
+        proxies.get( {url:url,timeout: timeout}, function (err, req , res) {
             if(err){
                 reject( err )
             }
-            if( msg ){
-                reject(  msg ) ;
+            if( req && JSON.parse(req.body).msg  ){
+                let msg = JSON.parse(req.body).msg ;
+                reject(  msg   ) ;
             }
-            else{
+            else if( res ){
                 let data = JSON.parse(res);
                 if( data ){
                     let datas = data ;
@@ -51,13 +56,16 @@ function send( url ){
     console.log( "start ");
     let datas = [];
     let index ;
-    for( let i= id  ; i<id+scope ; i++){
+    for( let i= id  ; /*i<id+scope*/ ; i++){
         index = i ;
         try{
-            let data = await send( url + i ); //请求到的 接口内容
+            if( proxyIndex < 0){
+                console.log( "proxyIndex == 0 ")
+                proxyIndex = proxys.length-1 ;
+            }
+            let data = await send( url + i , proxys[ proxyIndex ] ); //请求到的 接口内容
             if( data.douban_id ){
                 // datas.push( data );
-                // console.log( datas )
                 console.log( "正在加入数据库");
                 await createDouban( data);
             }
@@ -67,19 +75,25 @@ function send( url ){
             //     datas=[] ;
             // }
         }catch(err){
-            console.error("出错~" ,err );
-            await setCache( 'module.exports = "上一次出错ID: ' +  index++ +'"' ,"now" )
+            console.log("出错~" ,err );
             if( /rate_limit_exceeded2/.test(err) ){
+                /***
+                 * 如果超出 请求数量 则换ip再次请求
+                 */
+                proxyIndex-- ;
                 //如果 报错为 请求次数超限  则 暂停
-                await helper.sleep( pauseTime ) ;
+                // await helper.sleep( pauseTime ) ;
             }
-            if( /book_not_found/.test(err) ){
+            else if( /book_not_found/.test(err) ){
                 //如果 报错为 请求次数超限  则 退出node 
                 await setCache( index +"," ,"unknown" )
+                await setCache( 'module.exports = "上一次出错ID: ' +  index++ +'"' ,"now" )
+            }else{
+                proxyIndex-- ;
             }
         }
         //暂停 n 秒执行
-        await helper.sleep( helper.random(10) ) ;
+        await helper.sleep( helper.random(3) ) ;
     }
     console.log( "end ");
     // if( datas.length!==0  ){
