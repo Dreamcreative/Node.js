@@ -35,26 +35,29 @@ function send( url , proxy ){
             if(err){
                 reject( err )
             }
-            if( req && JSON.parse(req.body).msg  ){
-                let msg = JSON.parse(req.body).msg ;
-                reject(  msg   ) ;
-            }
-            else if( res ){
-                let data = JSON.parse(res);
-                if( data ){
-                    let datas = data ;
-                    for( let item in datas ){
-                        if( typeof datas[item] ==="object"){
-                            datas[item ] = JSON.stringify( datas[item ])
-                        }
-                        if( item==="id"){
-                            datas["douban_id"]=datas["id"];
-                            delete datas["id"];
-                        }
-                    }
-                    resolve( datas );
+            //处理 返回body 为 html 的情况
+            if( JSON.stringify(req.body).indexOf("<") <0){
+                if( req && JSON.parse(req.body).msg  ){
+                    let msg = JSON.parse(req.body).msg ;
+                    reject(  msg   ) ;
                 }
-                reject( "没有数据~" );
+                else if( res ){
+                    let data = JSON.parse(res);
+                    if( data ){
+                        let datas = data ;
+                        for( let item in datas ){
+                            if( typeof datas[item] ==="object"){
+                                datas[item ] = JSON.stringify( datas[item ])
+                            }
+                            if( item==="id"){
+                                datas["douban_id"]=datas["id"];
+                                delete datas["id"];
+                            }
+                        }
+                        resolve( datas );
+                    }
+                    reject( "没有数据~" );
+                }
             }
             reject( "没有数据~" );
         })
