@@ -25,7 +25,13 @@ function send( url , proxy ){
         //如果 proxy存在 则设置 代理 ，不存在 则使用 不使用代理
         const proxies = proxy? request.defaults({'proxy': proxy }) : request ; 
         console.log( "proxies      " ,proxy )
-        proxies.get( url ,{timeout: timeout}, function (err, req , res) {
+        request( {
+            url: url,
+            proxy: proxy,
+            method: 'GET',
+            tunnel:false , 
+            timeout: timeout 
+        } , function (err, req , res) {
             if(err){
                 reject( err )
             }
