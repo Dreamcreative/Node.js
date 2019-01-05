@@ -36,7 +36,7 @@ function send( url , proxy ){
                 reject( err )
             }
             //处理 返回body 为 html 的情况
-            if( JSON.stringify(req.body).indexOf("<") <0){
+            if( req &&  JSON.stringify(req.body).indexOf("<") <0 ){
                 if( req && JSON.parse(req.body).msg  ){
                     let msg = JSON.parse(req.body).msg ;
                     reject(  msg   ) ;
