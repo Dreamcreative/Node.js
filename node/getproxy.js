@@ -12,7 +12,7 @@ var useful = [];  //保存检查过有效性的代理
  */
 async function getXici() {
     url = "http://www.xicidaili.com/nn";  // 国内高匿代理
-
+    console.log("proxys        " , 1 )
     await request ({
         url: url,
         method: "GET",
@@ -85,12 +85,11 @@ async function saveProxys() {
         await fs.writeFileSync("proxys.js", "module.exports = " +  JSON.stringify(useful) );
         console.log("Save finished!");
     }
-    var timer = null ;
-    timer = setInterval(  function(){
-        proxys=[]; // 清空 之前的判断为有用的 代理ip
-        getXici();
-    }, timeout*1000) ;
     
 }
 getXici();  //启动这个爬虫
+setInterval(  function(){
+    proxys=[]; // 清空 之前的判断为有用的 代理ip
+    getXici();
+}, timeout*1000) ;
     
