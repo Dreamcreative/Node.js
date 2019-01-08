@@ -3,22 +3,17 @@ const request = require("request");
 const schedule = require('node-schedule');
 const fs = require("fs") ;
 const helper = require("./helper.js");
-const preId = require("./now.js");
+const id = require("./now.js");
 let proxys = require("./proxys.js");
 const timeout= 15000;
 let proxyIndex = proxys.length -1 ;
 const pauseTime = 10*60;
 let url = "https://api.douban.com/v2/book/";
-let id  ;
-if(  /(\d+)+?/.test(preId)){
-    id =  RegExp.$1 ;
-}
 if( !id ){
     console.log( "读取不到id~~~")
     process.exit();
 }
-let scope = id;
-
+const scope =  100000000 ;
 // 发送请求
 function send( url , proxy ){
     return new Promise( ( resolve , reject ) =>{
@@ -46,9 +41,9 @@ function send( url , proxy ){
                     if( data ){
                         let datas = data ;
                         for( let item in datas ){
-                            if( typeof datas[item] ==="object"){
-                                datas[item ] = JSON.stringify( datas[item ])
-                            }
+                            // if( typeof datas[item] ==="object"){
+                            //     datas[item ] = JSON.stringify( datas[item ])
+                            // }
                             if( item==="id"){
                                 datas["douban_id"]=datas["id"];
                                 delete datas["id"];
@@ -68,7 +63,10 @@ function send( url , proxy ){
     console.log( "start ");
     let datas = [];
     let index ;
-    for( let i= id  ; /*i<id+scope*/ ; i++){
+/*** 
+ * 如果不需要分段请求 则吧 for() 中的   i<scope  注释掉 
+ */
+    for( let i= id  ; i< scope ; i++){
         index = i ;
         try{
             if( proxyIndex < 0){
@@ -78,8 +76,9 @@ function send( url , proxy ){
             let data = await send( url + i , proxys[ proxyIndex ] ); //请求到的 接口内容
             if( data.douban_id ){
                 // datas.push( data );
+                data.status="0";
                 console.log( "正在加入数据库");
-                await setCache( 'module.exports = "上一次存储ID的下一个ID: ' +  data.douban_id++ +'"' ,"now" )
+                await setCache( 'module.exports = "' +  data.douban_id +'"  //上一次存储ID的下一个ID' ,"now" )
                 await createDouban( data);
             }
             // if( datas.length ==50){
@@ -88,21 +87,27 @@ function send( url , proxy ){
             //     datas=[] ;
             // }
         }catch(err){
+            let data = {} ;
+            data.douban_id = index;
             console.log("出错~" ,err );
             if( /rate_limit_exceeded2/.test(err) ){
                 /***
                  * 如果超出 请求数量 则换ip再次请求
                  */
+                data.status="2";
                 proxyIndex-- ;
                 //如果 报错为 请求次数超限  则 暂停
                 // await helper.sleep( pauseTime ) ;
             }
             else if( /book_not_found/.test(err) ){
                 //如果 报错为 请求次数超限  则 退出node 
+                data.status="1";
                 await setCache( index +"," ,"unknown" )
             }else{
+                data.status="2";
                 proxyIndex-- ;
             }
+            await createDouban( data);
         }
         //暂停 n 秒执行
         await helper.sleep( helper.random(3) ) ;
@@ -117,7 +122,7 @@ function send( url , proxy ){
 
     // 然后 退出 node 
     await setCache( "正常退出： "+ index  + "\n" , "cache" ) ; 
-    // process.exit();
+    process.exit();
 })();
 
 

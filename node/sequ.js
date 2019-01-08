@@ -1,17 +1,6 @@
 const Sequelize = require("sequelize");
-// const sequelize = new Sequelize("node","root","123456" ,{
-//     host:"localhost",
-//     dialect:"mysql",
-//     operatorsAliases:false , 
-//     pool:{
-//         max:5,
-//         min:0 ,
-//         acquire:30000,
-//         idle:10000,
-//     }
-// }) ;
-const sequelize = new Sequelize("douban","douban","douban" ,{
-    host:"dev.guaishoubobo.com",
+const sequelize = new Sequelize("postgres","postgres","123456" ,{
+    host:"localhost",
     dialect:"postgres",
     operatorsAliases:false , 
     pool:{
@@ -22,6 +11,7 @@ const sequelize = new Sequelize("douban","douban","douban" ,{
     }
 }) ;
 
+
 sequelize.authenticate().then(()=>{
     console.log( "Connection has been established successfully");
 }).catch(err=>{
@@ -30,21 +20,21 @@ sequelize.authenticate().then(()=>{
 
 // 添加 douban 数据库 sequelize 如果存在，则添加数据，
 // 不存在 则新增 表
-const douban = sequelize.define("douban" , {
+const douban = sequelize.define("newdouban" , {
     rating:{
-        type:Sequelize.STRING
+        type:Sequelize.JSON 
     },
     subtitle :{
         type:Sequelize.STRING
     },
     author :{
-        type:Sequelize.STRING
+        type:Sequelize.ARRAY(Sequelize.STRING )
     },
     pubdate :{
         type:Sequelize.STRING
     },
     tags :{
-        type:Sequelize.TEXT
+        type:Sequelize.JSON
     },
     origin_title :{
         type:Sequelize.STRING
@@ -56,7 +46,7 @@ const douban = sequelize.define("douban" , {
         type:Sequelize.STRING
     },
     translator :{
-        type:Sequelize.STRING
+        type:Sequelize.JSON
     },
     catalog :{
         type:Sequelize.TEXT
@@ -65,7 +55,7 @@ const douban = sequelize.define("douban" , {
         type:Sequelize.STRING
     },
     images :{
-        type:Sequelize.TEXT
+        type:Sequelize.JSON
     },
     alt :{
         type:Sequelize.STRING
@@ -95,12 +85,19 @@ const douban = sequelize.define("douban" , {
         type:Sequelize.TEXT
     },
     summary :{
-        type:Sequelize.TEXT
+        type:Sequelize.TEXT,
     },
     price :{
-        type:Sequelize.STRING
+        type:Sequelize.STRING,
     },
+    status:{
+        type:Sequelize.ENUM( ),
+        values: ['0', '1', '2'],
+        comment:"0 成功 ,1 book_not_found , 2 network_wrong",
+    }
 })
+
+
 
 exports.createDouban =async function createDouban(  data ){
     await douban.sync({force:false }).then( ()=>{
