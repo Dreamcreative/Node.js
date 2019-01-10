@@ -99,14 +99,14 @@ const douban = sequelize.define("newdouban" , {
 
 
 
-exports.createDouban =async function createDouban(  data ){
-    await douban.sync({force:false }).then( ()=>{
+exports.createDouban = function createDouban(  data ){
+    douban.sync({force:false }).then( ()=>{
         console.log("添加成功~")
         return douban.create( data ) ;
     })
 }
-exports.bulkCreateDouban =async function createDouban(  data ){
-    await douban.sync({force:false }).then( ()=>{
+exports.bulkCreateDouban = function createDouban(  data ){
+    douban.sync({force:false }).then( ()=>{
         console.log("添加成功~")
         return douban.bulkCreate( data ) ;
     })

@@ -1,0 +1,7 @@
+{
+	"timeout": 15000,
+	"pauseTime": 600,
+	"url": "https://api.douban.com/v2/book/",
+	"startId": 30339701,
+	"endId": 100000000
+}

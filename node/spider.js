@@ -1,30 +1,28 @@
 const { createDouban , bulkCreateDouban} = require("./sequ");
-const request = require("request");
-const schedule = require('node-schedule');
-const fs = require("fs") ;
-const helper = require("./helper.js");
-const id = require("./now.js");
-let proxys = require("./proxys.js");
-const timeout= 15000;
-let proxyIndex = proxys.length -1 ;
-const pauseTime = 10*60;
-let url = "https://api.douban.com/v2/book/";
-if( !id ){
-    console.log( "读取不到id~~~")
+const request    = require("request");
+const fs         = require("fs") ;
+const helper     = require("./helper.js");
+let   proxys     = require("./proxys.js");
+const config     = require("./config.json");
+let   proxyIndex = proxys.length -1 ;
+const timeout    = config.timeout ||1500;
+const pauseTime  = config.pauseTime || 10*60;
+const url        = config.url;
+const endId      = config.endId ;
+const startId    = config.startId ;
+if( !startId ){
+    console.log( "读取不到startid~~~")
     process.exit();
 }
-const scope =  100000000 ;
 // 发送请求
 function send( url , proxy ){
     return new Promise( ( resolve , reject ) =>{
-        //如果 proxy存在 则设置 代理 ，不存在 则使用 不使用代理
-        const proxies = proxy? request.defaults({'proxy': proxy }) : request ; 
         console.log( "proxies      " ,proxy )
         request( {
             url: url,
             proxy: proxy,
             method: 'GET',
-            tunnel:false , 
+            tunnel:false , //解决 请求长时间无反应 并且不报错
             timeout: timeout 
         } , function (err, req , res) {
             if(err){
@@ -41,9 +39,6 @@ function send( url , proxy ){
                     if( data ){
                         let datas = data ;
                         for( let item in datas ){
-                            // if( typeof datas[item] ==="object"){
-                            //     datas[item ] = JSON.stringify( datas[item ])
-                            // }
                             if( item==="id"){
                                 datas["douban_id"]=datas["id"];
                                 delete datas["id"];
@@ -60,13 +55,12 @@ function send( url , proxy ){
 }
 // 异步执行 执行函数 ，不阻滞 后续函数执行
 ( async()=>{
-    console.log( "start ");
     let datas = [];
     let index ;
 /*** 
- * 如果不需要分段请求 则吧 for() 中的   i<scope  注释掉 
+ * 如果不需要分段请求 则把 for() 中的   i<scope  注释掉 
  */
-    for( let i= id  ; i< scope ; i++){
+    for( let i= startId  ; i< endId ; i++){
         index = i ;
         try{
             if( proxyIndex < 0){
@@ -75,17 +69,10 @@ function send( url , proxy ){
             }
             let data = await send( url + i , proxys[ proxyIndex ] ); //请求到的 接口内容
             if( data.douban_id ){
-                // datas.push( data );
                 data.status="0";
                 console.log( "正在加入数据库");
-                await setCache( 'module.exports = "' +  data.douban_id +'"  //上一次存储ID的下一个ID' ,"now" )
                 await createDouban( data);
             }
-            // if( datas.length ==50){
-            //     console.log( "正在加入数据库");
-            //     await bulkCreateDouban( datas); //将大于50条的数据批量压入数据库
-            //     datas=[] ;
-            // }
         }catch(err){
             let data = {} ;
             data.douban_id = index;
@@ -97,49 +84,36 @@ function send( url , proxy ){
                 data.status="2";
                 proxyIndex-- ;
                 //如果 报错为 请求次数超限  则 暂停
-                // await helper.sleep( pauseTime ) ;
             }
             else if( /book_not_found/.test(err) ){
                 //如果 报错为 请求次数超限  则 退出node 
                 data.status="1";
-                await setCache( index +"," ,"unknown" )
             }else{
                 data.status="2";
                 proxyIndex-- ;
             }
             await createDouban( data);
         }
+        await setCache(   ++index  ,"now" )
         //暂停 n 秒执行
         await helper.sleep( helper.random(3) ) ;
     }
-    console.log( "end ");
     // if( datas.length!==0  ){
     //     console.log("最后压入")
     //     //在 循环请求完成后， 将 数组中剩余的 但是没有达到50条数据  导入数据库  
     //     await bulkCreateDouban( datas);
     //     console.log("压入成功")
     // }
-
     // 然后 退出 node 
     await setCache( "正常退出： "+ index  + "\n" , "cache" ) ; 
     process.exit();
 })();
 
-
-// 暂停执行
-// function sleep( sec ){
-//     var now = new Date();
-//     var exitTime = now.getTime() + sec*1000 ;
-//     while( true ){
-//         now = new Date();
-//         if( now.getTime() > exitTime) return ;
-//     }
-// }
 // 添加 日志
-async function setCache( data , type ){
+function setCache( data , type ){
     let name = helper.timeDir( new Date() ,"ymd" ) ;
     if( type =="cache"){
-        await fs.appendFileSync("./cache/cache"+ name +".txt" , data ,( err )=>{
+        fs.appendFileSync("./cache/cache"+ name +".txt" , data ,( err )=>{
             if( err ){
                 console.log( "err  " , err);
             }else{
@@ -147,7 +121,8 @@ async function setCache( data , type ){
             }
         } )
     }else if( type =="now" ){
-        await fs.writeFileSync("./now.js" , data , (err)=>{
+        config.startId = data;
+        fs.writeFileSync("./config.json" , new Buffer(JSON.stringify(config ,["timeout" ,"pauseTime","url","startId","endId"] ,"\t")) , (err)=>{
             if( err ){
                 console.log( "err  " , err);
             }else{
@@ -155,7 +130,7 @@ async function setCache( data , type ){
             }
         })
     }else if( type =="unknown" ){
-        await fs.appendFileSync("./unknown/unknown"+name+".txt" , data , (err)=>{
+        fs.appendFileSync("./unknown/unknown"+name+".txt" , data , (err)=>{
             if( err ){
                 console.log( "err  " , err);
             }else{
@@ -164,50 +139,5 @@ async function setCache( data , type ){
         })
     }
 }
-// function random( sec=5 ){
-//     return Math.floor( Math.random()*sec +1 ) ;
-// }
 
-// function send( url ){
-//     return new Promise(function(resolve,reject){
-//         request( url ,( err , req , res)=>{
-//             if(err){
-//                 reject(err);
-//                 return;
-//             }
-//             resolve(res)
-//         })
-//     })
-// }
-
-//暂停执行函数  promise 方式
-// function sleep (t){
-//     return new Promise(function(resolve,reject){
-//         setTimeout(function(){
-//             resolve(1111)
-//         },t*1000)
-//     })
-// }
-
-
-// (async()=>{
-// async / await  代码例子~
-//     console.log("start")
-//     for(let i=0; i<100;i++){
-//         // try{
-            
-//         // }catch(err){
-//         //     console.log(err)
-//         // }
-
-//         let data = await send("http://www.baidu.com");
-//         console.log(data)
-//         await sleep(3000);
-//         console.log("count "+i);
-       
-//     }
-
-//     console.log("end")
-
-// })()
-
+    
